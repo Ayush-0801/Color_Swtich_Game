@@ -75,7 +75,6 @@ public class StartGame extends Application{
     public void comeToThisScene(Stage stage, Player curr) throws FileNotFoundException {
         currentPlayer=curr;
         currentStage=stage;
-        System.out.println("Current Player Name is "+currentPlayer.getName());
         currentPlayer.setAliveStatus(true);
         start(stage);
     }
@@ -168,7 +167,7 @@ public class StartGame extends Application{
             else if(ob_type.equals("PlusObs")) {
                 sidelength = 100;
                 Obstacle pl = new Plus(400,
-                       sd.getYcoor().get(i),
+                        sd.getYcoor().get(i),
                         sidelength);
 
                 ar.add(pl);
@@ -177,15 +176,16 @@ public class StartGame extends Application{
             }
 
             else if(ob_type.equals("LineObs")) {
-                LineObs ln = new LineObs(sd.getXcoor().get(i),
+                Obstacle ln = new LineObs(sd.getXcoor().get(i),
                         sd.getYcoor().get(i));
                 ar.add(ln);
                 holder.getChildren().add(ln.getGroup());
             }
+
             else if(ob_type.equals("DottedObs"))
             {
-                sidelength=200;
-                UniquePatterns up=new UniquePatterns(sd.getXcoor().get(i),sd.getYcoor().get(i),sidelength);
+                sidelength=300;
+                Obstacle up=new UniquePatterns(sd.getXcoor().get(i),sd.getYcoor().get(i),sidelength);
                 ar.add(up);
                 holder.getChildren().add(up.getGroup());
             }
@@ -253,7 +253,7 @@ public class StartGame extends Application{
 
     @Override
     public void start(Stage stage) throws FileNotFoundException{
-        
+
         score=new Text(50,55,Integer.toString(currentPlayer.getScore()));
         score.setFont(Font.loadFont ("file:resources/fonts/BlissfulThinking.otf", 55));
         score.setFill(Color.WHITE);
@@ -317,7 +317,9 @@ public class StartGame extends Application{
                     Image fireTrail= null;
                     try {
                         fireTrail = new Image(new FileInputStream("src/Icons/Burn.gif"));
-                    } catch (FileNotFoundException e) {
+                    }
+
+                    catch (FileNotFoundException e) {
                         System.out.println("Exception in trail");
                         e.printStackTrace();
                     }
@@ -381,7 +383,7 @@ public class StartGame extends Application{
 
                 if(currentPlayer.getShiftInY()>(initial + 2*dist) && currentPlayer.getCenterY() <=
                         ar.get(1).getGroup().getBoundsInParent().getCenterY() - (dist)/2
-                && ar.get(1).getObstacleType().equals("MultiCircle"))
+                        && ar.get(1).getObstacleType().equals("MultiCircle"))
                 {
                     currentPlayer.supersonicspeed=false;
                     currentPlayer.getBall().setFill(obj);
@@ -399,112 +401,31 @@ public class StartGame extends Application{
         forcefield=new AnimationTimer() {
 
             private long timer=0;
-            private Color obj;
+            private Color oldPlayerColor;
             private Color sceneOld;
             private Group radialLines;
             private Circle newObj;
-
-            final double gravity=0.55;
-            final double time=0.55;
-
+            private LocalTime beforeTime;
 
             @Override
             public void handle(long l) {
 
-
-                obj= (Color) currentPlayer.getBall().getFill();
-                sceneOld= (Color) scene.getFill();
-                scene.setFill(Color.WHITE);
-
-//                    Image shield= null;
-//                    try {
-//                        shield = new Image(new FileInputStream("src/Icons/Burn.gif"));
-//                    } catch (FileNotFoundException e) {
-//                        System.out.println("Exception in shield");
-//                        e.printStackTrace();
-//                    }
-//
-//                    ImageView shieldView=new ImageView();
-//                    shieldView.setRotate(180);
-//                    shieldView.setImage(shield);
-//                    shieldView.setX(currentPlayer.getCenterX()-38.5);
-//                    shieldView.setY(currentPlayer.getCenterY()-10);
-//                    shieldView.setFitWidth(80);
-//                    shieldView.setPreserveRatio(true);
-
-//                    Glow ef=new Glow();
-//                    ef.setLevel(0.7);
-//                    shieldView.setEffect(ef);
-
-
-
-
-
-//                    currentPlayer.getGroup().getChildren().add(0,shieldView);
-
-
-                currentPlayer.setFill(Color.GREEN);
-                newObj=new Circle();
-                newObj.setCenterX(currentPlayer.getCenterX());
-                newObj.setCenterY(currentPlayer.getCenterY());
-                newObj.setRadius(20);
-                newObj.setFill(Color.TRANSPARENT);
-                newObj.setStroke(Color.GREEN);
-                radialLines=new Group();
-                radialLines.getChildren().add(newObj);
-                holder.getChildren().add(radialLines);
-
-
-//                currentPlayer.setFill(Color.rgb((new Random()).nextInt(255),(new Random()).nextInt(255),(new Random()).nextInt(255)));
-//                currentPlayer.setShiftInY(currentPlayer.getShiftInY()+2.1);
-
-                JumpBall(currentPlayer.getcurrSpeed(), gravity, time);
-                try {
-                    insertObjects();
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+                if(timer==0) {
+                    oldPlayerColor = (Color) currentPlayer.getBall().getFill();
+                    sceneOld = (Color) scene.getFill();
+                    scene.setFill(Color.BLACK);
+                    currentPlayer.setFill(Color.LIGHTSKYBLUE);
+                    beforeTime=LocalTime.now();
+                    timer++;
                 }
 
-                for (Obstacle obs : ar)
+                if(LocalTime.now().getSecond() - beforeTime.getSecond() >=5)
                 {
-                    Group group=obs.getGroup();
-                    if (currentPlayer.getBall().intersects(group.getBoundsInParent()))
-                    {
-                        System.out.println("lll");
-                        for (int j = 0; j < group.getChildren().size(); j++) {
-                            Shape s1 = (Shape) group.getChildren().get(j);
-                            Shape inter = Shape.intersect(s1, currentPlayer.getBall());
-                            if (inter.getBoundsInParent().getWidth() != (double) (-1.0)) {
-                                currentPlayer.getBall().setFill(obj);
-                                currentPlayer.getBall().setEffect(null);
-//                currentPlayer.getGroup().getChildren().remove(0);
-                                scene.setFill(sceneOld);
-                                holder.getChildren().remove(holder.getChildren().indexOf(radialLines));
-                                currentPlayer.forcefield=false;
-                                this.stop();
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                ColorSwitcherCheck();
-                UpdateScore();
-                removeObstaclesOutOfScreen();
-
-
-
-
-
-
-                    currentPlayer.getBall().setFill(obj);
-                    currentPlayer.getBall().setEffect(null);
-//                currentPlayer.getGroup().getChildren().remove(0);
+                    currentPlayer.getBall().setFill(oldPlayerColor);
                     scene.setFill(sceneOld);
-                    holder.getChildren().remove(holder.getChildren().indexOf(radialLines));
                     currentPlayer.forcefield=false;
                     this.stop();
-
+                }
             }
         };
 
@@ -538,20 +459,22 @@ public class StartGame extends Application{
                         e.printStackTrace();
                     }
                 }
+
                 try {
                     insertObjects();
-                } catch (FileNotFoundException e) {
+                }
+
+                catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
+
                 checkSuperSonic();
                 checkForceField();
-                if(currentPlayer.supersonicspeed==false) {
+
+                if(currentPlayer.supersonicspeed==false && currentPlayer.forcefield==false) {
                     CollisionCheck();
                 }
-                else if(currentPlayer.forcefield==false)
-                {
-                    CollisionCheck();
-                }
+
                 ColorSwitcherCheck();
                 UpdateScore();
                 removeObstaclesOutOfScreen();
@@ -690,7 +613,6 @@ public class StartGame extends Application{
         dist=430;
         while(ar.size()<7)
         {
-            System.out.println("ADDING MORE");
             Random ob=new Random();
             int value=ob.nextInt(5)+1;
 
@@ -719,7 +641,7 @@ public class StartGame extends Application{
 
                     case 3:
 
-                        sidelength=150;
+                        sidelength=200;
                         Obstacle tr=new TriangleObs ( 400,
                                 currentPlayer.getCenterY() - dist - (sidelength/(Math.sqrt(3))),
                                 sidelength, currentPlayer.getFill());
@@ -741,7 +663,7 @@ public class StartGame extends Application{
 
                     case 5:
 
-                        LineObs unique=new LineObs( 400 ,
+                        Obstacle unique=new LineObs( 400 ,
                                 currentPlayer.getCenterY() - dist);
                         ar.add(unique);
                         holder.getChildren().add(unique.getGroup());
@@ -759,6 +681,7 @@ public class StartGame extends Application{
                     while(value==3)
                         value=ob.nextInt(5)+1;
                 }
+                value=7;
                 switch (value) {
                     case 1:
 
@@ -784,7 +707,7 @@ public class StartGame extends Application{
 
                     case 3:
 
-                        sidelength=150;
+                        sidelength=200;
                         last=ar.get(calc).getGroup();
                         Obstacle tr=new TriangleObs ( 400,
                                 last.getBoundsInParent().getCenterY() - dist - (sidelength/(Math.sqrt(3))),
@@ -832,7 +755,7 @@ public class StartGame extends Application{
                     case 6:
 
                         last=ar.get(calc).getGroup();
-                        LineObs a=new LineObs( 400 ,
+                        Obstacle a=new LineObs( 400 ,
                                 last.getBoundsInParent().getCenterY() - dist);
                         ar.add(a);
                         holder.getChildren().add(a.getGroup());
@@ -840,9 +763,9 @@ public class StartGame extends Application{
 
                     case 7:
 
-                        sidelength=200;
+                        sidelength=300;
                         last=ar.get(calc).getGroup();
-                        UniquePatterns dc=new UniquePatterns(300,last.getBoundsInParent().getCenterY() - dist - (sidelength/(Math.sqrt(3))),sidelength);
+                        Obstacle dc=new UniquePatterns(400,last.getBoundsInParent().getCenterY() - dist - (sidelength/(Math.sqrt(3))),sidelength);
                         ar.add(dc);
                         holder.getChildren().add(dc.getGroup());
                         break;
@@ -878,16 +801,9 @@ public class StartGame extends Application{
                 rt.setNode(flash);
                 rt.play();
 
-//                Reflection rf=new Reflection();
-//                rf.setBottomOpacity(0.05);
-//                rf.setFraction(12);
-//                rf.setTopOffset(10);
-//                rf.setTopOpacity(0.2);
-//                flash.setEffect(rf);
-
                 supersonicObj.getChildren().add(flash);
-//                superSpeed.add(supersonicObj);
-                forceField.add(supersonicObj);
+                superSpeed.add(supersonicObj);
+//                forceField.add(supersonicObj);
                 holder.getChildren().add(supersonicObj);
                 counter=0;
             }
@@ -982,7 +898,6 @@ public class StartGame extends Application{
         if(ar.isEmpty()==false && ar.get(0).getGroup().getBoundsInParent().getMinY()>800)
         {
             ar.remove(0);
-            System.out.println("REMOVED");
         }
     }
 
@@ -992,7 +907,6 @@ public class StartGame extends Application{
         while(current_stars.isEmpty()==false && currentPlayer.getBall().intersects(current_stars.get(0).getGroup().getBoundsInParent()))
         {
             hit=true;
-            System.out.println("RIGHT HERE");
             holder.getChildren().remove(holder.getChildren().indexOf(current_stars.get(0).getGroup()));
             current_stars.remove(0);
         }
@@ -1169,7 +1083,6 @@ public class StartGame extends Application{
                 deserializer();
                 boolean flag=false;
 
-                System.out.println(SaveOrLoadGame.saveData.size());
                 for (int i = 0; i < SaveOrLoadGame.saveData.size(); i++) {
 
                     if (SaveOrLoadGame.saveData.get(i).getName().equals(currentPlayer.getName())) {
@@ -1181,7 +1094,6 @@ public class StartGame extends Application{
 
                         SaveOrLoadGame.saveData.set(i,new SaveData(currentPlayer,ar,current_cs,current_stars));
                     }
-                    System.out.println("CURRENT PLAYER NAME IS "+currentPlayer.getName());
                 }
 
                 if(flag==false)
@@ -1230,8 +1142,6 @@ public class StartGame extends Application{
                     out_sd.writeObject(SaveOrLoadGame.saveData);
                     out_sd.close();
                     file_sd.close();
-
-                    System.out.println("Game Saved");
                 }
                 catch (IOException e) {
                     System.out.println("Game Save: Unsuccessfull");
@@ -1387,7 +1297,6 @@ public class StartGame extends Application{
         deserializer();
         boolean flag=false;
 
-        System.out.println(SaveOrLoadGame.saveData.size());
         for (int i = 0; i < SaveOrLoadGame.saveData.size(); i++) {
 
             if (SaveOrLoadGame.saveData.get(i).getName().equals(currentPlayer.getName())) {
@@ -1399,7 +1308,6 @@ public class StartGame extends Application{
 
 //                System.out.println(SaveOrLoadGame.saveData.get(i).getHighestScore());
             }
-            System.out.println("CURRENT PLAYER NAME IS "+currentPlayer.getName());
         }
 
 //        if(flag==false)
@@ -1448,8 +1356,6 @@ public class StartGame extends Application{
             out_sd.writeObject(SaveOrLoadGame.saveData);
             out_sd.close();
             file_sd.close();
-
-            System.out.println("Game Saved");
         }
         catch (IOException e) {
             System.out.println("Game Save: Unsuccessfull");
