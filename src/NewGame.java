@@ -82,7 +82,6 @@ public class NewGame extends Application {
                     _beginNewGame=new StartGame();
                     try {
                         _beginNewGame.comeToThisScene(stage,_newPlayer);
-                        System.out.println("FRPM HERE ON CLICK");
                     }
                     catch (FileNotFoundException e) {
                         e.printStackTrace();
@@ -104,7 +103,6 @@ public class NewGame extends Application {
 
                         try {
                             _beginNewGame.comeToThisScene(stage,_newPlayer);
-                            System.out.println("FRPM HERE");
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                         }
