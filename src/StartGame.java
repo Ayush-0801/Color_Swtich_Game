@@ -446,6 +446,13 @@ public class StartGame extends Application{
                     Twinkle.setY(130);
                     Twinkle.setPreserveRatio(true);
 
+                    fadeBall=new FadeTransition();
+                    fadeBall.setDuration(Duration.millis(250));
+                    fadeBall.setNode(currentPlayer.getBall());
+                    fadeBall.setFromValue(10);
+                    fadeBall.setCycleCount(1);
+                    fadeBall.setToValue(0.5);
+                    fadeBall.play();
 
                     Glow ef=new Glow();
                     ef.setLevel(0.7);
@@ -465,6 +472,7 @@ public class StartGame extends Application{
                     scene.setFill(sceneOld);
                     currentPlayer.forcefield=false;
                     currentPlayer.getBall().setEffect(null);
+                    fadeBall.stop();
                     currentPlayer.getGroup().getChildren().remove(0);
                     currentPlayer.getGroup().getChildren().remove(0);
                     timer=0;
@@ -604,12 +612,8 @@ public class StartGame extends Application{
             int index=holder.getChildren().indexOf(superSpeed.get(0));
             superSpeed.remove(0);
             holder.getChildren().remove(index);
-            if(currentPlayer.forcefield!=true)
-            {
-                currentPlayer.supersonicspeed=true;
-                supersonic.start();
-            }
-
+            currentPlayer.supersonicspeed=true;
+            supersonic.start();
         }
     }
 
@@ -620,11 +624,10 @@ public class StartGame extends Application{
             int index=holder.getChildren().indexOf(forceFieldObjects.get(0));
             forceFieldObjects.remove(0);
             holder.getChildren().remove(index);
-            if(currentPlayer.supersonicspeed!=true)
-            {
-                currentPlayer.forcefield=true;
+            if(currentPlayer.forcefield==false) {
                 forceFieldTimer.start();
             }
+            currentPlayer.forcefield=true;
         }
     }
     public void JumpBall(double speeddown, double gravity, double time)
@@ -825,7 +828,7 @@ public class StartGame extends Application{
 
             counter+=1;
 
-            if(counter>=10)
+            if(counter>=1)
             {
                 Group last=ar.get(ar.size()-1).getGroup();
                 Group supersonicObj=new Group();
@@ -853,42 +856,10 @@ public class StartGame extends Application{
                 rt.play();
 
                 supersonicObj.getChildren().add(flash);
-                superSpeed.add(supersonicObj);
+//                superSpeed.add(supersonicObj);
+                forceFieldObjects.add(supersonicObj);
                 holder.getChildren().add(supersonicObj);
                 counter=0;
-            }
-            else if(counter==5)
-            {
-                Group last=ar.get(ar.size()-1).getGroup();
-                Group forcefieldObj=new Group();
-                Image shieldImage=new Image(new FileInputStream("src/Icons/shield.png"));
-                ImageView shield=new ImageView();
-
-                shield.setImage(shieldImage);
-                shield.setX(365);
-                shield.setY((last.getBoundsInParent().getCenterY())-dist/2);
-                shield.setFitWidth(62);
-                shield.setPreserveRatio(true);
-
-                Glow ef=new Glow();
-                ef.setLevel(0.7);
-                shield.setEffect(ef);
-
-                RotateTransition rt=new RotateTransition();
-                rt.setAxis(Rotate.Y_AXIS);
-                rt.setFromAngle(0);
-                rt.setByAngle(360);
-                rt.setCycleCount(-1);
-                rt.setInterpolator(Interpolator.LINEAR);
-                rt.setDuration(Duration.millis(800));
-                rt.setNode(shield);
-                rt.play();
-
-                forcefieldObj.getChildren().add(shield);
-                forceFieldObjects.add(forcefieldObj);
-                holder.getChildren().add(forcefieldObj);
-
-
             }
 
             else if(counter%2==0)

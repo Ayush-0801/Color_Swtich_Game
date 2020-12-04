@@ -30,9 +30,9 @@ public class Main extends Application
         scene = new Scene(holder, 800, 800);
 
         String path="Music/gameplay.mp3";
-//        Media m=new Media(new File(path).toURI().toString());
-//        m1=new MediaPlayer(m);
-//        m1.setAutoPlay(true);
+        Media m=new Media(new File(path).toURI().toString());
+        m1=new MediaPlayer(m);
+        m1.setAutoPlay(true);
 
         FileInputStream input1 = new FileInputStream("src/Icons/PlayButton.png");
         Image img1 = new Image(input1);
