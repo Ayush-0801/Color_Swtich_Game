@@ -50,9 +50,9 @@ public class StartGame extends Application{
     private double dist=430;
     private AnimationTimer t;
     private AnimationTimer supersonic;
-    private AnimationTimer forcefield;
+    private AnimationTimer forceFieldTimer;
     private ArrayList<Group> superSpeed=new ArrayList<Group>();
-    private ArrayList<Group> forceField=new ArrayList<Group>();
+    private ArrayList<Group> forceFieldObjects=new ArrayList<Group>();
 
     private Group displayTimer;
     private double initial; // forsupersonic
@@ -398,14 +398,17 @@ public class StartGame extends Application{
         };
 
         //Bonus 2
-        forcefield=new AnimationTimer() {
+        forceFieldTimer=new AnimationTimer() {
 
             private long timer=0;
             private Color oldPlayerColor;
             private Color sceneOld;
             private Group radialLines;
             private Circle newObj;
+            private FadeTransition fadeBall;
             private LocalTime beforeTime;
+            private ImageView FieldAround;
+            private ImageView Twinkle;
 
             @Override
             public void handle(long l) {
@@ -414,16 +417,57 @@ public class StartGame extends Application{
                     oldPlayerColor = (Color) currentPlayer.getBall().getFill();
                     sceneOld = (Color) scene.getFill();
                     scene.setFill(Color.BLACK);
-                    currentPlayer.setFill(Color.LIGHTSKYBLUE);
+                    currentPlayer.setFill(Color.GHOSTWHITE);
                     beforeTime=LocalTime.now();
+
+                    Image FieldImage= null;
+                    try {
+                        FieldImage = new Image(new FileInputStream("src/Icons/shield.gif"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    FieldAround=new ImageView();
+                    FieldAround.setRotate(180);
+                    FieldAround.setImage(FieldImage);
+                    FieldAround.setFitWidth(80);
+                    FieldAround.setPreserveRatio(true);
+
+                    Image Twinkling= null;
+                    try {
+                        Twinkling = new Image(new FileInputStream("src/Icons/twinkle.gif"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    Twinkle=new ImageView();
+                    Twinkle.setRotate(0);
+                    Twinkle.setImage(Twinkling);
+                    Twinkle.setFitWidth(400);
+                    Twinkle.setX(200);
+                    Twinkle.setY(130);
+                    Twinkle.setPreserveRatio(true);
+
+
+                    Glow ef=new Glow();
+                    ef.setLevel(0.7);
+                    FieldAround.setEffect(ef);
+                    Twinkle.setEffect(ef);
+
+                    currentPlayer.getGroup().getChildren().add(0,FieldAround);
+                    currentPlayer.getGroup().getChildren().add(0,Twinkle);
                     timer++;
                 }
+                FieldAround.setX(currentPlayer.getCenterX()-38.5);
+                FieldAround.setY(currentPlayer.getCenterY()-37.5);
 
-                if(LocalTime.now().getSecond() - beforeTime.getSecond() >=5)
+                if(LocalTime.now().getSecond() - beforeTime.getSecond() >=10)
                 {
                     currentPlayer.getBall().setFill(oldPlayerColor);
                     scene.setFill(sceneOld);
                     currentPlayer.forcefield=false;
+                    currentPlayer.getBall().setEffect(null);
+                    currentPlayer.getGroup().getChildren().remove(0);
+                    currentPlayer.getGroup().getChildren().remove(0);
+                    timer=0;
                     this.stop();
                 }
             }
@@ -560,20 +604,27 @@ public class StartGame extends Application{
             int index=holder.getChildren().indexOf(superSpeed.get(0));
             superSpeed.remove(0);
             holder.getChildren().remove(index);
-            currentPlayer.supersonicspeed=true;
-            supersonic.start();
+            if(currentPlayer.forcefield!=true)
+            {
+                currentPlayer.supersonicspeed=true;
+                supersonic.start();
+            }
+
         }
     }
 
     public void checkForceField()
     {
-        if( forceField.isEmpty()==false && currentPlayer.getBall().intersects(forceField.get(0).getBoundsInParent()))
+        if( forceFieldObjects.isEmpty()==false && currentPlayer.getBall().intersects(forceFieldObjects.get(0).getBoundsInParent()))
         {
-            int index=holder.getChildren().indexOf(forceField.get(0));
-            forceField.remove(0);
+            int index=holder.getChildren().indexOf(forceFieldObjects.get(0));
+            forceFieldObjects.remove(0);
             holder.getChildren().remove(index);
-            currentPlayer.forcefield=true;
-            forcefield.start();
+            if(currentPlayer.supersonicspeed!=true)
+            {
+                currentPlayer.forcefield=true;
+                forceFieldTimer.start();
+            }
         }
     }
     public void JumpBall(double speeddown, double gravity, double time)
@@ -681,7 +732,7 @@ public class StartGame extends Application{
                     while(value==3)
                         value=ob.nextInt(5)+1;
                 }
-                value=7;
+//                value=7;
                 switch (value) {
                     case 1:
 
@@ -774,7 +825,7 @@ public class StartGame extends Application{
 
             counter+=1;
 
-            if(counter>=1)
+            if(counter>=10)
             {
                 Group last=ar.get(ar.size()-1).getGroup();
                 Group supersonicObj=new Group();
@@ -803,9 +854,41 @@ public class StartGame extends Application{
 
                 supersonicObj.getChildren().add(flash);
                 superSpeed.add(supersonicObj);
-//                forceField.add(supersonicObj);
                 holder.getChildren().add(supersonicObj);
                 counter=0;
+            }
+            else if(counter==5)
+            {
+                Group last=ar.get(ar.size()-1).getGroup();
+                Group forcefieldObj=new Group();
+                Image shieldImage=new Image(new FileInputStream("src/Icons/shield.png"));
+                ImageView shield=new ImageView();
+
+                shield.setImage(shieldImage);
+                shield.setX(365);
+                shield.setY((last.getBoundsInParent().getCenterY())-dist/2);
+                shield.setFitWidth(62);
+                shield.setPreserveRatio(true);
+
+                Glow ef=new Glow();
+                ef.setLevel(0.7);
+                shield.setEffect(ef);
+
+                RotateTransition rt=new RotateTransition();
+                rt.setAxis(Rotate.Y_AXIS);
+                rt.setFromAngle(0);
+                rt.setByAngle(360);
+                rt.setCycleCount(-1);
+                rt.setInterpolator(Interpolator.LINEAR);
+                rt.setDuration(Duration.millis(800));
+                rt.setNode(shield);
+                rt.play();
+
+                forcefieldObj.getChildren().add(shield);
+                forceFieldObjects.add(forcefieldObj);
+                holder.getChildren().add(forcefieldObj);
+
+
             }
 
             else if(counter%2==0)
