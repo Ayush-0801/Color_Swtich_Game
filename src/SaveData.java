@@ -19,6 +19,7 @@ public class SaveData implements Serializable {
     private ArrayList<Double> obstacleCenterX;
     private ArrayList<Double> obstacleCenterY;
     private ArrayList<Integer> obstacleRotationVariable;
+    private ArrayList<Integer> obstacleUniqueRandValue;
 
     //For Color Switchers
     private ArrayList<Double> cs_X;
@@ -27,6 +28,8 @@ public class SaveData implements Serializable {
     //For Stars
     private ArrayList<Double> st_X;
     private ArrayList<Double> st_Y;
+
+    private static final long serialVersionUID=2;
 
     public SaveData(Player currentPlayer, ArrayList<Obstacle> arobs,ArrayList<ColorSwitcher> arcs,ArrayList<Star> arst)
     {
@@ -51,22 +54,22 @@ public class SaveData implements Serializable {
 
     public void saveColor(Player currentPlayer)
     {
-        if(currentPlayer.equals(Color.rgb(65,228,243)))
+        if(currentPlayer.getBall().getFill().equals(Color.rgb(65,228,243)))
         {
             colorCode=1;
         }
 
-        else if(currentPlayer.equals(Color.rgb(147,33,252)))
+        else if(currentPlayer.getBall().getFill().equals(Color.rgb(147,33,252)))
         {
             colorCode=2;
         }
 
-        else if(currentPlayer.equals(Color.rgb(247,225,29)))
+        else if(currentPlayer.getBall().getFill().equals(Color.rgb(247,225,29)))
         {
             colorCode=3;
         }
 
-        else if(currentPlayer.equals(Color.rgb(255,16,136)))
+        else if(currentPlayer.getBall().getFill().equals(Color.rgb(255,16,136)))
         {
             colorCode=4;
         }
@@ -119,13 +122,15 @@ public class SaveData implements Serializable {
         obstacleCenterX=new ArrayList<Double>();
         obstacleCenterY=new ArrayList<Double>();
         obstacleRotationVariable=new ArrayList<Integer>();
+        obstacleUniqueRandValue=new ArrayList<Integer>();
+
         for(Obstacle obs : arobs)
         {
             obstacleType.add(obs.getObstacleType());
             obstacleCenterX.add(obs.getCenterX()+(obs.getGroup().getBoundsInParent().getCenterX()-obs.getInitialX()));
             obstacleCenterY.add(obs.getCenterY()+(obs.getGroup().getBoundsInParent().getCenterY()-obs.getInitialY()));
             obstacleRotationVariable.add(obs.getRotationVariable());
-
+            obstacleUniqueRandValue.add(obs.getRandValue());
         }
     }
 
@@ -148,6 +153,8 @@ public class SaveData implements Serializable {
     {
         return obstacleRotationVariable;
     }
+
+    public ArrayList<Integer> getObstacleUniqueRandValue() { return obstacleUniqueRandValue; }
 
     //For Color Switchers
     public void saveColorSwitcher(ArrayList<ColorSwitcher> arcs)
@@ -201,7 +208,5 @@ public class SaveData implements Serializable {
     {
         return st_Y;
     }
-
-
 
 }
