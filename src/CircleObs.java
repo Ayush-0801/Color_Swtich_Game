@@ -16,6 +16,7 @@ public class CircleObs extends Obstacle{
     public CircleObs(double x, double y, double r)
     {
         super(x,y);
+
         _a1=new Arc();
         _a1.setCenterX(x);
         _a1.setCenterY(y);
