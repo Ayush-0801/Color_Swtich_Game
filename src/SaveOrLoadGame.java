@@ -4,6 +4,8 @@ import javafx.geometry.Pos;
 import javafx.scene.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
@@ -17,11 +19,7 @@ import java.util.*;
 public class SaveOrLoadGame extends Application {
 
     private Color bg=Color.rgb(54,54,54);
-
-//    public static ArrayList<SavePlayerStats> players=new ArrayList<SavePlayerStats>();
-//    public static ArrayList<SaveObstaclesStats> player_obstacle=new ArrayList<SaveObstaclesStats>();
-//    public static ArrayList<SaveColorSwitchers> player_colorSwitchers=new ArrayList<SaveColorSwitchers>();
-//    public static ArrayList<SaveStars> player_stars=new ArrayList<SaveStars>();
+    private MediaPlayer clickbutton;
 
     public static ArrayList<SaveData> saveData=new ArrayList<>();
 
@@ -65,6 +63,10 @@ public class SaveOrLoadGame extends Application {
             public void handle(ActionEvent actionEvent) {
                 Main obj=new Main();
                 try {
+                    clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                    clickbutton.setVolume(0.04);
+                    clickbutton.play();
+
                     obj.comeBackHome(stage);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -78,53 +80,16 @@ public class SaveOrLoadGame extends Application {
         savetitle.setFill(Color.WHITE);
 
         try {
-//            FileInputStream fs = new FileInputStream("Saves/Players_List.ser");
-//            ObjectInputStream ob = new ObjectInputStream(fs);
-//
-//            FileInputStream fs_obs = new FileInputStream("Saves/Obstacles_List.ser");
-//            ObjectInputStream ob_obs = new ObjectInputStream(fs_obs);
-//
-//            FileInputStream fs_cs = new FileInputStream("Saves/ColorSwitchers.ser");
-//            ObjectInputStream ob_cs = new ObjectInputStream(fs_cs);
-//
-//            FileInputStream fs_st = new FileInputStream("Saves/Stars.ser");
-//            ObjectInputStream ob_st = new ObjectInputStream(fs_st);
-
             FileInputStream fs_sd = new FileInputStream("Saves/FullData.ser");
             ObjectInputStream ob_sd = new ObjectInputStream(fs_sd);
 
             while (true) {
                 try {
-//                    SavePlayerStats obj = (SavePlayerStats) ob.readObject();
-//                    SaveObstaclesStats obstacles = (SaveObstaclesStats) ob_obs.readObject();
-//                    SaveColorSwitchers csObjects = (SaveColorSwitchers) ob_cs.readObject();
-//                    SaveStars stObjects = (SaveStars) ob_st.readObject();
-
-//                    players = (ArrayList<SavePlayerStats>) ob.readObject();
-//                    player_obstacle = (ArrayList<SaveObstaclesStats>) ob_obs.readObject();
-//                    player_colorSwitchers = (ArrayList<SaveColorSwitchers>) ob_cs.readObject();
-//                    player_stars = (ArrayList<SaveStars>) ob_st.readObject();
-
                     saveData=(ArrayList<SaveData>)ob_sd.readObject();
                 } catch (IOException e) {
                     break;
                 }
-//            StartGame b=new StartGame();
-//            b.comeHereFromSave(stage, obj , obstacles, csObjects, stObjects);
-
             }
-//            ob.close();
-//            fs.close();
-//
-//            ob_obs.close();
-//            fs_obs.close();
-//
-//            ob_cs.close();
-//            fs_cs.close();
-//
-//            ob_st.close();
-//            fs_st.close();
-
             ob_sd.close();
             fs_sd.close();
 
@@ -135,26 +100,6 @@ public class SaveOrLoadGame extends Application {
         }
 
         Group sgss=new Group();
-//        EventHandler<ActionEvent> event=new EventHandler<ActionEvent>() {
-//            private int currentIndex;
-//
-//            @Override
-//            public void handle(ActionEvent actionEvent) {
-//                StartGame b=new StartGame();
-//                try {
-//                    b.comeHereFromSave(stage, players.get(this.currentIndex), player_obstacle.get(this.currentIndex),
-//                            player_colorSwitchers.get(this.currentIndex), player_stars.get(this.currentIndex));
-//                } catch (FileNotFoundException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            public void getIndex(int i)
-//            {
-//                currentIndex=i;
-//            }
-//        };
-
-//        System.out.println(players.size());
         for(int i=0;i<saveData.size();i++)
         {
             Button sg[]=new Button[saveData.size()];
@@ -196,10 +141,13 @@ public class SaveOrLoadGame extends Application {
             sg[i].setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent actionEvent) {
+
+                    clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                    clickbutton.setVolume(0.04);
+                    clickbutton.play();
+
                     StartGame b=new StartGame();
                     try {
-//                        b.comeHereFromSave(stage, players.get(sgss.getChildren().indexOf(actionEvent.getSource())), player_obstacle.get(sgss.getChildren().indexOf(actionEvent.getSource())),
-//                                player_colorSwitchers.get(sgss.getChildren().indexOf(actionEvent.getSource())), player_stars.get(sgss.getChildren().indexOf(actionEvent.getSource())));
                         b.comeHereFromSave(stage,saveData.get(sgss.getChildren().indexOf(actionEvent.getSource())));
                     } catch (FileNotFoundException e) {
                         e.printStackTrace();
