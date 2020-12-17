@@ -22,6 +22,8 @@ public class ColorSwitcher{
     private Color yellow=Color.rgb(247,225,29);
     private Color pink=Color.rgb(255,16,136);
 
+    private static final long serialVersionUID=5;
+
     public ColorSwitcher(double x,double y,double r)
     {
         cs1=new Arc();
