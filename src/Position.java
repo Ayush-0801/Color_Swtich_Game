@@ -1,6 +1,7 @@
 public class Position {
     private int x;
     private int y;
+    private static final long serialVersionUID=4;
 
     public void Position()
     {
