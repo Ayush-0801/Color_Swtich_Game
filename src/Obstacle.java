@@ -13,15 +13,20 @@ public abstract class Obstacle {
     protected Color yellow=Color.rgb(247,225,29);
     protected Color pink=Color.rgb(255,16,136);
     protected Group g;
+
     protected double centerX;
     protected double centerY;
     protected double initialX;
     protected double initialY;
     protected int rotationVariable=0;
+    protected int randValue;
+
+    private static final long serialVersionUID=6;
 
     public Obstacle(double x, double y) {
         centerX=x;
         centerY=y;
+        randValue=-1;
     }
 
     public double getCenterX()
@@ -95,5 +100,10 @@ public abstract class Obstacle {
     public int getRotationVariable()
     {
         return rotationVariable;
+    }
+
+    public int getRandValue()
+    {
+        return randValue;
     }
 }
