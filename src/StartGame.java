@@ -4,6 +4,8 @@ import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.control.Button;
 import javafx.scene.effect.*;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.*;
 import javafx.scene.layout.*;
@@ -26,15 +28,16 @@ public class StartGame extends Application{
     private Scene scene;
     private Scene beforecollision;
     private Scene previous;
-    private boolean Up_Key_Pressed=false;
+    private boolean Up_Key_Pressed;
     private Player currentPlayer;
 
-    private Color blue=Color.rgb(65,228,243);
-    private Color purple=Color.rgb(147,33,252);
-    private Color yellow=Color.rgb(247,225,29);
-    private Color pink=Color.rgb(255,16,136);
-    private Color bg=Color.rgb(54,54,54);
+    private final Color blue=Color.rgb(65,228,243);
+    private final Color purple=Color.rgb(147,33,252);
+    private final Color yellow=Color.rgb(247,225,29);
+    private final Color pink=Color.rgb(255,16,136);
+    private final Color bg=Color.rgb(54,54,54);
     private Text score;
+    private Text scoreAnimator;
     private Text highestScore;
 
     private ArrayList<Obstacle> ar;
@@ -43,8 +46,12 @@ public class StartGame extends Application{
 
     private double sidelength=0;
     private double radius=0;
+
     private Group scoreDisplay;
     private Group showHand;
+    private Group displayTimer;
+    private Group scoreAnimation;
+
     private Stage currentStage;
     private long counter=0;
     private double dist=430;
@@ -54,8 +61,7 @@ public class StartGame extends Application{
     private ArrayList<Group> superSpeed=new ArrayList<Group>();
     private ArrayList<Group> forceFieldObjects=new ArrayList<Group>();
 
-    private Group displayTimer;
-    private double initial; // forsupersonic
+    private double initial;
 
     public StartGame()
     {
@@ -88,6 +94,7 @@ public class StartGame extends Application{
         currentPlayer.setCenterY(sd.centerY());
         currentPlayer.getBall().setRadius(sd.getRadius());
 
+        System.out.println(sd.colorCode());
         switch (sd.colorCode()) {
             case 1 :
                 currentPlayer.getBall().setFill(blue);
@@ -97,6 +104,7 @@ public class StartGame extends Application{
                 break;
             case 3 :
                 currentPlayer.getBall().setFill(yellow);
+                System.out.println("Was here");
                 break;
             case 4 :
                 currentPlayer.getBall().setFill(pink);
@@ -133,7 +141,7 @@ public class StartGame extends Application{
             }
 
             else if(ob_type.equals("TriangleObs")) {
-                sidelength = 150;
+                sidelength = 200;
 
                 Obstacle tr = new TriangleObs(sd.getXcoor().get(i),
                         sd.getYcoor().get(i),
@@ -176,6 +184,7 @@ public class StartGame extends Application{
             }
 
             else if(ob_type.equals("LineObs")) {
+
                 Obstacle ln = new LineObs(sd.getXcoor().get(i),
                         sd.getYcoor().get(i));
                 ar.add(ln);
@@ -185,7 +194,7 @@ public class StartGame extends Application{
             else if(ob_type.equals("DottedObs"))
             {
                 sidelength=300;
-                Obstacle up=new UniquePatterns(sd.getXcoor().get(i),sd.getYcoor().get(i),sidelength);
+                Obstacle up=new UniquePatterns(sd.getXcoor().get(i),sd.getYcoor().get(i),sidelength,sd.getObstacleUniqueRandValue().get(i));
                 ar.add(up);
                 holder.getChildren().add(up.getGroup());
             }
@@ -251,8 +260,18 @@ public class StartGame extends Application{
         }
     }
 
+    private static MediaPlayer dead;
+    private static MediaPlayer startGame;
+    private static MediaPlayer superSonicSong;
+    private static MediaPlayer forceFieldSong;
+
     @Override
     public void start(Stage stage) throws FileNotFoundException{
+
+        Media startGamePlay=new Media(new File("Music/start.wav").toURI().toString());
+        startGame=new MediaPlayer(startGamePlay);
+        startGame.setVolume(0.04);
+        startGame.play();
 
         score=new Text(50,55,Integer.toString(currentPlayer.getScore()));
         score.setFont(Font.loadFont ("file:resources/fonts/BlissfulThinking.otf", 55));
@@ -291,7 +310,15 @@ public class StartGame extends Application{
         showHand=new Group();
         showHand.getChildren().add(handImage);
 
+        scoreAnimator=new Text(-50,-50,"+1");
+        scoreAnimator.setFont(Font.loadFont ("file:resources/fonts/BlissfulThinking.otf", 55));
+        scoreAnimator.setFill(Color.WHITE);
+
+        scoreAnimation=new Group();
+        scoreAnimation.getChildren().add(scoreAnimator);
+
         holder.getChildren().add(scoreDisplay);
+        holder.getChildren().add(scoreAnimation);
         holder.getChildren().add(showHand);
         holder.getChildren().add(titleMenu);
         holder.getChildren().add(currentPlayer.getGroup());
@@ -310,6 +337,13 @@ public class StartGame extends Application{
 
                 if(timer==0)
                 {
+                    Main.m1.stop();
+
+                    superSonicSong=new MediaPlayer(new Media(new File("Music/supersonicSong.mp3").toURI().toString()));
+                    superSonicSong.setCycleCount(-1);
+                    superSonicSong.setVolume(0.15);
+                    superSonicSong.play();
+
                     obj= (Color) currentPlayer.getBall().getFill();
                     sceneOld= (Color) scene.getFill();
                     scene.setFill(Color.BLACK);
@@ -336,20 +370,50 @@ public class StartGame extends Application{
                     ef.setLevel(0.7);
                     fireTrailView.setEffect(ef);
 
+                    ImageView jetPlane=new ImageView();
+                    try {
+                        jetPlane.setImage(new Image(new FileInputStream("src/Icons/plane.png")));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    jetPlane.setX(currentPlayer.getCenterX()-38.5);
+                    jetPlane.setY(currentPlayer.getCenterY()-67);
+                    jetPlane.setFitWidth(80);
+                    jetPlane.setPreserveRatio(true);
+                    jetPlane.setEffect(ef);
+
+                    RotateTransition rt = new RotateTransition();
+                    rt.setAxis(Rotate.Y_AXIS);
+                    rt.setFromAngle(0);
+                    rt.setByAngle(180); //360
+                    rt.setCycleCount(-1);
+                    rt.setInterpolator(Interpolator.LINEAR);
+                    rt.setDuration(Duration.millis(550)); // 650
+                    rt.setNode(jetPlane);
+                    rt.play();
+
+                    currentPlayer.getGroup().getChildren().add(currentPlayer.getGroup().getChildren().size() , jetPlane);
+
                     fallLines=new Group();
                     holder.getChildren().add(fallLines);
+
                     newObj=new Line();
                     fallLines.getChildren().add(newObj);
+
                     currentPlayer.getGroup().getChildren().add(0,fireTrailView);
                     timer++;
+
+                    currentPlayer.getBall().setOpacity(0);
                 }
 
-                currentPlayer.setFill(Color.DARKORANGE);
                 newObj.setStartX((new Random()).nextInt(800));
                 newObj.setStartY(0);
                 newObj.setEndX(newObj.getStartX());
                 newObj.setEndY(800);
                 newObj.setStrokeWidth(7+(new Random()).nextInt(4));
+
+                if(counter==2)
+                    counter=0;
 
                 switch((new Random()).nextInt(4) + 1)
                 {
@@ -369,13 +433,12 @@ public class StartGame extends Application{
                         newObj.setStroke(yellow);
                         break;
                 }
-//                currentPlayer.setFill(Color.rgb((new Random()).nextInt(255),(new Random()).nextInt(255),(new Random()).nextInt(255)));
                 currentPlayer.setShiftInY(currentPlayer.getShiftInY()+2.1);
 
                 for(Obstacle el : ar) {
                     for (int i = 0; i < holder.getChildren().size(); i++) {
                         Group g = (Group) holder.getChildren().get(i);
-                        if (g != currentPlayer.getGroup() && g != scoreDisplay && g!=fallLines) {
+                        if (g != currentPlayer.getGroup() && g != scoreDisplay && g!=fallLines && g!=scoreAnimation) {
                             g.setLayoutY(g.getLayoutY() + 3.1);
                         }
                     }
@@ -387,92 +450,21 @@ public class StartGame extends Application{
                 {
                     currentPlayer.supersonicspeed=false;
                     currentPlayer.getBall().setFill(obj);
+                    currentPlayer.getBall().setOpacity(1);
                     currentPlayer.getBall().setEffect(null);
                     currentPlayer.getGroup().getChildren().remove(0);
                     scene.setFill(sceneOld);
                     holder.getChildren().remove(holder.getChildren().indexOf(fallLines));
+                    currentPlayer.getGroup().getChildren().remove(currentPlayer.getGroup().getChildren().size()-1);
                     this.stop();
                     timer=0;
+                    superSonicSong.stop();
+                    Main.m1.play();
                 }
             }
         };
-
-        //Bonus 2
-        forceFieldTimer=new AnimationTimer() {
-
-            private long timer=0;
-            private Color oldPlayerColor;
-            private Color sceneOld;
-            private Group radialLines;
-            private Circle newObj;
-            private FadeTransition fadeBall;
-            private LocalTime beforeTime;
-            private ImageView FieldAround;
-            private ImageView Twinkle;
-
-            @Override
-            public void handle(long l) {
-
-                if(timer==0) {
-                    oldPlayerColor = (Color) currentPlayer.getBall().getFill();
-                    sceneOld = (Color) scene.getFill();
-                    scene.setFill(Color.BLACK);
-                    currentPlayer.setFill(Color.GHOSTWHITE);
-                    beforeTime=LocalTime.now();
-
-                    Image FieldImage= null;
-                    try {
-                        FieldImage = new Image(new FileInputStream("src/Icons/shield.gif"));
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    FieldAround=new ImageView();
-                    FieldAround.setRotate(180);
-                    FieldAround.setImage(FieldImage);
-                    FieldAround.setFitWidth(80);
-                    FieldAround.setPreserveRatio(true);
-
-                    Image Twinkling= null;
-                    try {
-                        Twinkling = new Image(new FileInputStream("src/Icons/twinkle.gif"));
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    Twinkle=new ImageView();
-                    Twinkle.setRotate(0);
-                    Twinkle.setImage(Twinkling);
-                    Twinkle.setFitWidth(400);
-                    Twinkle.setX(200);
-                    Twinkle.setY(130);
-                    Twinkle.setPreserveRatio(true);
-
-
-                    Glow ef=new Glow();
-                    ef.setLevel(0.7);
-                    FieldAround.setEffect(ef);
-                    Twinkle.setEffect(ef);
-
-                    currentPlayer.getGroup().getChildren().add(0,FieldAround);
-                    currentPlayer.getGroup().getChildren().add(0,Twinkle);
-                    timer++;
-                }
-                FieldAround.setX(currentPlayer.getCenterX()-38.5);
-                FieldAround.setY(currentPlayer.getCenterY()-37.5);
-
-                if(LocalTime.now().getSecond() - beforeTime.getSecond() >=10)
-                {
-                    currentPlayer.getBall().setFill(oldPlayerColor);
-                    scene.setFill(sceneOld);
-                    currentPlayer.forcefield=false;
-                    currentPlayer.getBall().setEffect(null);
-                    currentPlayer.getGroup().getChildren().remove(0);
-                    currentPlayer.getGroup().getChildren().remove(0);
-                    timer=0;
-                    this.stop();
-                }
-            }
-        };
-
+        
+        Media die=new Media(new File("Music/dead.wav").toURI().toString());
         t=new AnimationTimer() {
             final double gravity=0.55;
             final double time=0.55;
@@ -483,13 +475,22 @@ public class StartGame extends Application{
                 beforecollision=stage.getScene();
 
                 if(currentPlayer.supersonicspeed==false) {
-                    JumpBall(currentPlayer.getcurrSpeed(), gravity, time);
+                    try {
+                        JumpBall(currentPlayer.getcurrSpeed(), gravity, time);
+                    } catch (LargeBallRadiusException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 if(!currentPlayer.getAliveStatus()) {
+
+                    dead=new MediaPlayer(die);
+                    dead.setVolume(0.04);
+                    dead.play();
+
                     this.stop();
                     try {
-                        if(currentPlayer.getScore()<1)
+                        if(currentPlayer.getScore()<2)
                         {
                             GameOver(stage);
                         }
@@ -508,7 +509,7 @@ public class StartGame extends Application{
                     insertObjects();
                 }
 
-                catch (FileNotFoundException e) {
+                catch (FileNotFoundException | InsufficientEntityException e) {
                     e.printStackTrace();
                 }
 
@@ -520,7 +521,11 @@ public class StartGame extends Application{
                 }
 
                 ColorSwitcherCheck();
-                UpdateScore();
+                try {
+                    UpdateScore();
+                } catch (InsufficientStarsException e) {
+                    e.printStackTrace();
+                }
                 removeObstaclesOutOfScreen();
             }
         };
@@ -604,77 +609,34 @@ public class StartGame extends Application{
             int index=holder.getChildren().indexOf(superSpeed.get(0));
             superSpeed.remove(0);
             holder.getChildren().remove(index);
-            if(currentPlayer.forcefield!=true)
-            {
-                currentPlayer.supersonicspeed=true;
+
+            if(!currentPlayer.supersonicspeed)
                 supersonic.start();
-            }
 
+            currentPlayer.supersonicspeed=true;
         }
     }
 
-    public void checkForceField()
-    {
-        if( forceFieldObjects.isEmpty()==false && currentPlayer.getBall().intersects(forceFieldObjects.get(0).getBoundsInParent()))
-        {
-            int index=holder.getChildren().indexOf(forceFieldObjects.get(0));
-            forceFieldObjects.remove(0);
-            holder.getChildren().remove(index);
-            if(currentPlayer.supersonicspeed!=true)
-            {
-                currentPlayer.forcefield=true;
-                forceFieldTimer.start();
-            }
-        }
-    }
-    public void JumpBall(double speeddown, double gravity, double time)
-    {
-        speeddown+=gravity*time;
-        if(Up_Key_Pressed && (currentPlayer.getCenterY()+speeddown)>400)
-        {
-            speeddown=-16.7*gravity*time;
-            Up_Key_Pressed=false;
-        }
+    public void insertObjects() throws FileNotFoundException,InsufficientEntityException{
 
-        else if(Up_Key_Pressed)
-        {
-            ShiftScreenDown();
-            speeddown=-5*gravity*time;
-            Up_Key_Pressed=false;
-        }
-
-        if(currentPlayer.getCenterY()+speeddown<= showHand.getBoundsInParent().getMinY()-22)
-        {
-            currentPlayer.setCenterY(currentPlayer.getCenterY() + speeddown);
-        }
-
-        if(currentPlayer.getCenterY() >800)
-        {
-            currentPlayer.setCenterY(currentPlayer.getCenterY() + speeddown);
-            currentPlayer.setAliveStatus(false);
-        }
-        initial=currentPlayer.getShiftInY();
-
-        //checking supersonic speed
-        //
-        currentPlayer.setcurrSpeed(speeddown);
-    }
-
-    public void insertObjects() throws FileNotFoundException {
         dist=430;
+
         while(ar.size()<7)
         {
             Random ob=new Random();
-            int value=ob.nextInt(5)+1;
 
             if(ar.isEmpty()) {
+
+                int value;
+                value=ob.nextInt(3)+1;
+
                 switch (value) {
 
                     case 1:
 
                         sidelength = 150;
-                        Obstacle sq = new SquareObs(400 - sidelength / 2,
-                                currentPlayer.getCenterY() - dist-sidelength/2 + 75, sidelength);
+                        Obstacle sq = new SquareObs(400,
+                                currentPlayer.getCenterY() - dist, sidelength);
                         ((SquareObs) sq).setTransition();
                         ar.add(sq);
                         holder.getChildren().add(sq.getGroup());
@@ -684,7 +646,7 @@ public class StartGame extends Application{
 
                         radius=75;
                         Obstacle cr=new CircleObs(400,
-                                currentPlayer.getCenterY() - dist + 75, radius);
+                                currentPlayer.getCenterY() - dist, radius);
                         ar.add(cr);
                         ((CircleObs) cr).setTransition();
                         holder.getChildren().add(cr.getGroup());
@@ -694,52 +656,60 @@ public class StartGame extends Application{
 
                         sidelength=200;
                         Obstacle tr=new TriangleObs ( 400,
-                                currentPlayer.getCenterY() - dist - (sidelength/(Math.sqrt(3))),
+                                currentPlayer.getCenterY() - dist,
                                 sidelength, currentPlayer.getFill());
                         ((TriangleObs) tr).setTransition();
                         ar.add(tr);
                         holder.getChildren().add(tr.getGroup());
                         break;
-
-                    case 4:
-
-                        sidelength=100;
-                        Obstacle pl=new Plus ( 400 ,
-                                currentPlayer.getCenterY() - dist,
-                                sidelength);
-                        ((Plus) pl).setTransition();
-                        ar.add(pl);
-                        holder.getChildren().add(pl.getGroup());
-                        break;
-
-                    case 5:
-
-                        Obstacle unique=new LineObs( 400 ,
-                                currentPlayer.getCenterY() - dist);
-                        ar.add(unique);
-                        holder.getChildren().add(unique.getGroup());
-                        break;
-
                 }
             }
 
             else
             {
                 int calc=ar.size()-1;
-                value=ob.nextInt(7)+1;
-                if(current_cs.isEmpty()==false)
+                int value;
+
+                if(currentPlayer.getScore()<1)
                 {
-                    while(value==3)
-                        value=ob.nextInt(5)+1;
+                    value=ob.nextInt(3)+1;
+
+                    if(current_cs.isEmpty()==false)
+                    {
+                        while(value==3)
+                            value=ob.nextInt(3)+1;
+                    }
                 }
-//                value=7;
+
+                else if(currentPlayer.getScore()<2)
+                {
+                    value=ob.nextInt(6)+1;
+
+                    if(current_cs.isEmpty()==false)
+                    {
+                        while(value==3)
+                            value=ob.nextInt(6)+1;
+                    }
+                }
+
+                else
+                {
+                    value=ob.nextInt(7)+1;
+
+                    if(current_cs.isEmpty()==false)
+                    {
+                        while(value==3)
+                            value=ob.nextInt(7)+1;
+                    }
+                }
+
                 switch (value) {
                     case 1:
 
                         sidelength = 150;
-                        Obstacle sq = new SquareObs(400 - sidelength/2
-                                , ar.get(calc).getGroup().getBoundsInParent().getCenterY() - dist
-                                - sidelength/2 , sidelength);
+                        Obstacle sq = new SquareObs(400,
+                                ar.get(calc).getGroup().getBoundsInParent().getCenterY() - dist,
+                                sidelength);
                         ((SquareObs) sq).setTransition();
                         ar.add(sq);
                         holder.getChildren().add(sq.getGroup());
@@ -761,7 +731,7 @@ public class StartGame extends Application{
                         sidelength=200;
                         last=ar.get(calc).getGroup();
                         Obstacle tr=new TriangleObs ( 400,
-                                last.getBoundsInParent().getCenterY() - dist - (sidelength/(Math.sqrt(3))),
+                                last.getBoundsInParent().getCenterY() - dist,
                                 sidelength, currentPlayer.getFill());
                         ((TriangleObs) tr).setTransition();
                         ar.add(tr);
@@ -816,7 +786,7 @@ public class StartGame extends Application{
 
                         sidelength=300;
                         last=ar.get(calc).getGroup();
-                        Obstacle dc=new UniquePatterns(400,last.getBoundsInParent().getCenterY() - dist - (sidelength/(Math.sqrt(3))),sidelength);
+                        Obstacle dc=new UniquePatterns(400, last.getBoundsInParent().getCenterY() - dist, sidelength,-1);
                         ar.add(dc);
                         holder.getChildren().add(dc.getGroup());
                         break;
@@ -828,67 +798,76 @@ public class StartGame extends Application{
             if(counter>=10)
             {
                 Group last=ar.get(ar.size()-1).getGroup();
-                Group supersonicObj=new Group();
-                Image flashImage=new Image(new FileInputStream("src/Icons/illustrate.png"));
-                ImageView flash=new ImageView();
 
-                flash.setImage(flashImage);
-                flash.setX(365);
-                flash.setY((last.getBoundsInParent().getCenterY())-dist/2);
-                flash.setFitWidth(62);
-                flash.setPreserveRatio(true);
+                int random=new Random().nextInt(2)+1;
 
-                Glow ef=new Glow();
-                ef.setLevel(0.7);
-                flash.setEffect(ef);
+                if(currentPlayer.forcefield)
+                    random=2;
 
-                RotateTransition rt=new RotateTransition();
-                rt.setAxis(Rotate.Y_AXIS);
-                rt.setFromAngle(0);
-                rt.setByAngle(360);
-                rt.setCycleCount(-1);
-                rt.setInterpolator(Interpolator.LINEAR);
-                rt.setDuration(Duration.millis(650));
-                rt.setNode(flash);
-                rt.play();
+                if(currentPlayer.supersonicspeed)
+                    random=1;
 
-                supersonicObj.getChildren().add(flash);
-                superSpeed.add(supersonicObj);
-                holder.getChildren().add(supersonicObj);
+                if(random==1)
+                {
+                    Group supersonicObj = new Group();
+                    Image flashImage = new Image(new FileInputStream("src/Icons/illustrate.png"));
+                    ImageView flash = new ImageView();
+
+                    flash.setImage(flashImage);
+                    flash.setX(365);
+                    flash.setY((last.getBoundsInParent().getCenterY()) - dist / 2);
+                    flash.setFitWidth(62);
+                    flash.setPreserveRatio(true);
+
+                    Glow ef = new Glow();
+                    ef.setLevel(0.7);
+                    flash.setEffect(ef);
+
+                    RotateTransition rt = new RotateTransition();
+                    rt.setAxis(Rotate.Y_AXIS);
+                    rt.setFromAngle(0);
+                    rt.setByAngle(360);
+                    rt.setCycleCount(-1);
+                    rt.setInterpolator(Interpolator.LINEAR);
+                    rt.setDuration(Duration.millis(650));
+                    rt.setNode(flash);
+                    rt.play();
+
+                    supersonicObj.getChildren().add(flash);
+                    superSpeed.add(supersonicObj);
+                    holder.getChildren().add(supersonicObj);
+                }
+
+                else {
+
+                    Group forceFieldCreate=new Group();
+                    Image ForceFieldSymbol=new Image(new FileInputStream("src/Icons/shieldCreate.png"));
+                    ImageView ShowShield=new ImageView();
+                    ShowShield.setImage(ForceFieldSymbol);
+                    ShowShield.setX(365);
+                    ShowShield.setY((last.getBoundsInParent().getCenterY()) - dist / 2);
+                    ShowShield.setFitWidth(62);
+                    ShowShield.setPreserveRatio(true);
+
+                    Glow ef = new Glow();
+                    ef.setLevel(0.7);
+                    ShowShield.setEffect(ef);
+
+                    RotateTransition rt = new RotateTransition();
+                    rt.setAxis(Rotate.Y_AXIS);
+                    rt.setFromAngle(0);
+                    rt.setByAngle(360);
+                    rt.setCycleCount(-1);
+                    rt.setInterpolator(Interpolator.LINEAR);
+                    rt.setDuration(Duration.millis(650));
+                    rt.setNode(ShowShield);
+                    rt.play();
+
+                    forceFieldCreate.getChildren().add(ShowShield);
+                    forceFieldObjects.add(forceFieldCreate);
+                    holder.getChildren().add(forceFieldCreate);
+                }
                 counter=0;
-            }
-            else if(counter==5)
-            {
-                Group last=ar.get(ar.size()-1).getGroup();
-                Group forcefieldObj=new Group();
-                Image shieldImage=new Image(new FileInputStream("src/Icons/shield.png"));
-                ImageView shield=new ImageView();
-
-                shield.setImage(shieldImage);
-                shield.setX(365);
-                shield.setY((last.getBoundsInParent().getCenterY())-dist/2);
-                shield.setFitWidth(62);
-                shield.setPreserveRatio(true);
-
-                Glow ef=new Glow();
-                ef.setLevel(0.7);
-                shield.setEffect(ef);
-
-                RotateTransition rt=new RotateTransition();
-                rt.setAxis(Rotate.Y_AXIS);
-                rt.setFromAngle(0);
-                rt.setByAngle(360);
-                rt.setCycleCount(-1);
-                rt.setInterpolator(Interpolator.LINEAR);
-                rt.setDuration(Duration.millis(800));
-                rt.setNode(shield);
-                rt.play();
-
-                forcefieldObj.getChildren().add(shield);
-                forceFieldObjects.add(forcefieldObj);
-                holder.getChildren().add(forcefieldObj);
-
-
             }
 
             else if(counter%2==0)
@@ -912,6 +891,11 @@ public class StartGame extends Application{
                 current_cs.add(c);
                 holder.getChildren().add(c.getGroup());
             }
+        }
+
+        if(ar.size()<3)
+        {
+            throw new InsufficientEntityException("More entities needed on screen");
         }
     }
 
@@ -956,6 +940,7 @@ public class StartGame extends Application{
                     }
                 }
             }
+
             else if(obs instanceof UniquePatterns)
             {
                 Group group=obs.getGroup();
@@ -984,39 +969,13 @@ public class StartGame extends Application{
         }
     }
 
-    public void UpdateScore()
-    {
-        boolean hit=false;
-        while(current_stars.isEmpty()==false && currentPlayer.getBall().intersects(current_stars.get(0).getGroup().getBoundsInParent()))
-        {
-            hit=true;
-            holder.getChildren().remove(holder.getChildren().indexOf(current_stars.get(0).getGroup()));
-            current_stars.remove(0);
-        }
-        if(hit)
-        {
-            currentPlayer.setScore(currentPlayer.getScore()+1);
-            score.setText(Integer.toString(currentPlayer.getScore()));
-        }
-        else
-        {
-            if(currentPlayer.getScore()>currentPlayer.getHighest_score())
-            {
-                currentPlayer.setHighest_score(currentPlayer.getScore());
-            }
-
-            highestScore=new Text();
-            highestScore.setText(Integer.toString(currentPlayer.getHighest_score()));
-            score.setText(Integer.toString(currentPlayer.getScore()));
-
-        }
-    }
+    private static MediaPlayer star;
 
     public void ShiftScreenDown()
     {
         for(int i=0;i<holder.getChildren().size();i++) {
             Group g=(Group)holder.getChildren().get(i);
-            if(g!=currentPlayer.getGroup() && g!=scoreDisplay) {
+            if(g!=currentPlayer.getGroup() && g!=scoreDisplay && g!=scoreAnimation) {
                 TranslateTransition tr = new TranslateTransition();
                 tr.setNode(g);
 
@@ -1028,315 +987,21 @@ public class StartGame extends Application{
         }
     }
 
-    public void ColorSwitcherCheck()
-    {
-        boolean hit=false;
 
-        while(current_cs.isEmpty()==false && currentPlayer.getBall().intersects(current_cs.get(0).getBoundsInParent()))
-        {
-            hit=true;
-            holder.getChildren().remove(current_cs.get(0).getGroup());
-            current_cs.remove(0);
-        }
-
-        if(hit)
-        {
-            Random ob=new Random();
-            int value=ob.nextInt(4)+1;
-
-            if(currentPlayer.getFill().equals(blue))
-            {
-                while(value==1)
-                    value=ob.nextInt(4)+1;
-            }
-            else if(currentPlayer.getFill().equals(purple))
-            {
-                while(value==2)
-                    value=ob.nextInt(4)+1;
-            }
-            else if(currentPlayer.getFill().equals(yellow))
-            {
-                while(value==3)
-                    value=ob.nextInt(4)+1;
-            }
-            else if(currentPlayer.getFill().equals(pink))
-            {
-                while(value==4)
-                    value=ob.nextInt(4)+1;
-            }
-
-            switch (value) {
-                case 1 :
-                    currentPlayer.setFill(blue);
-                    break;
-                case 2 :
-                    currentPlayer.setFill(purple);
-                    break;
-                case 3 :
-                    currentPlayer.setFill(yellow);
-                    break;
-                case 4 :
-                    currentPlayer.setFill(pink);
-                    break;
-            }
-        }
-    }
-    public void PauseMenuFunction(Stage stage) throws FileNotFoundException
-    {
-        previous=stage.getScene();
-        Pane holder = new Pane();
-        Scene scene = new Scene(holder, 800, 800);
-
-        FileInputStream input1 = new FileInputStream("src/Icons/HomeButton.png");
-        Image img1= new Image(input1);
-        ImageView homeimg = new ImageView(img1);
-        homeimg.setFitHeight(70);
-        homeimg.setPreserveRatio(true);
-
-        FileInputStream input = new FileInputStream("src/Icons/PlayButton.png");
-        Image img = new Image(input);
-        ImageView resumeimg = new ImageView(img);
-        resumeimg.setFitHeight(150);
-        resumeimg.setPreserveRatio(true);
-
-        Button homebutton=new Button();
-        homebutton.setTranslateX(50);
-        homebutton.setTranslateY(30);
-        homebutton.setStyle(
-                "-fx-background-radius: 100em; " +
-                        "-fx-min-width: 70px; " +
-                        "-fx-min-height: 70px; " +
-                        "-fx-max-width: 70px; " +
-                        "-fx-max-height: 70px;" +
-                        "-fx-background-color: #555555"
-        );
-        homebutton.setGraphic(homeimg);
-        homebutton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                Main obj=new Main();
-                try {
-                    obj.comeBackHome(stage);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        Button resumebutton=new Button();
-        resumebutton.setTranslateX(315);
-        resumebutton.setTranslateY(250);
-        resumebutton.setStyle(
-                "-fx-background-radius: 100em; " +
-                        "-fx-min-width: 150px; " +
-                        "-fx-min-height: 150px; " +
-                        "-fx-max-width: 150px; " +
-                        "-fx-max-height: 150px;" +
-                        "-fx-background-color: #555555"
-        );
-        resumebutton.setGraphic(resumeimg);
-        resumebutton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                stage.setScene(previous);
-            }
-        });
-
-        Button savebutton=new Button();
-        savebutton.setTranslateX(225);
-        savebutton.setTranslateY(450);
-        savebutton.setStyle(
-                "-fx-background-radius: 20em; " +
-                        "-fx-min-width: 350px; " +
-                        "-fx-min-height: 70px; " +
-                        "-fx-max-width: 350px; " +
-                        "-fx-max-height: 70px;" +
-                        "-fx-background-color: #5D5D5D;"+
-                        "-fx-font-size: 30px;"+
-                        "-fx-font-weight: bold;"+
-                        "-fx-text-fill: white;"+
-                        "-fx-font-family: \"Blissful Thinking\";"
-        );
-        savebutton.setText("SAVE PROGRESS");
-        savebutton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent actionEvent) {
-
-                deserializer();
-                boolean flag=false;
-
-                for (int i = 0; i < SaveOrLoadGame.saveData.size(); i++) {
-
-                    if (SaveOrLoadGame.saveData.get(i).getName().equals(currentPlayer.getName())) {
-                        flag = true;
-//                        SaveOrLoadGame.players.set(i, new SavePlayerStats(currentPlayer));
-//                        SaveOrLoadGame.player_obstacle.set(i, new SaveObstaclesStats(ar));
-//                        SaveOrLoadGame.player_colorSwitchers.set(i, new SaveColorSwitchers(current_cs));
-//                        SaveOrLoadGame.player_stars.set(i, new SaveStars(current_stars));
-
-                        SaveOrLoadGame.saveData.set(i,new SaveData(currentPlayer,ar,current_cs,current_stars));
-                    }
-                }
-
-                if(flag==false)
-                {
-//                    SaveOrLoadGame.players.add(new SavePlayerStats(currentPlayer));
-//                    SaveOrLoadGame.player_obstacle.add(new SaveObstaclesStats(ar));
-//                    SaveOrLoadGame.player_colorSwitchers.add(new SaveColorSwitchers(current_cs));
-//                    SaveOrLoadGame.player_stars.add(new SaveStars(current_stars));
-                    SaveOrLoadGame.saveData.add(new SaveData(currentPlayer,ar,current_cs,current_stars));
-                }
-
-                String filenameP="Saves/Players_List.ser";
-                String filenameO="Saves/Obstacles_List.ser";
-                String filenameCS="Saves/ColorSwitchers.ser";
-                String filenameSt="Saves/Stars.ser";
-                String filenameSd="Saves/FullData.ser";
-
-                try
-                {
-//                    FileOutputStream file_p=new FileOutputStream(filenameP);
-//                    ObjectOutputStream out_p=new ObjectOutputStream(file_p);
-//                    out_p.writeObject(SaveOrLoadGame.players);
-//                    out_p.close();
-//                    file_p.close();
-//
-//                    FileOutputStream file_o=new FileOutputStream(filenameO);
-//                    ObjectOutputStream out_o=new ObjectOutputStream(file_o);
-//                    out_o.writeObject(SaveOrLoadGame.player_obstacle);
-//                    out_o.close();
-//                    file_o.close();
-//
-//                    FileOutputStream file_cs=new FileOutputStream(filenameCS);
-//                    ObjectOutputStream out_cs=new ObjectOutputStream(file_cs);
-//                    out_cs.writeObject(SaveOrLoadGame.player_colorSwitchers);
-//                    out_cs.close();
-//                    file_cs.close();
-//
-//                    FileOutputStream file_st=new FileOutputStream(filenameSt);
-//                    ObjectOutputStream out_st=new ObjectOutputStream(file_st);
-//                    out_st.writeObject(SaveOrLoadGame.player_stars);
-//                    out_st.close();
-//                    file_st.close();
-
-                    FileOutputStream file_sd=new FileOutputStream(filenameSd);
-                    ObjectOutputStream out_sd=new ObjectOutputStream(file_sd);
-                    out_sd.writeObject(SaveOrLoadGame.saveData);
-                    out_sd.close();
-                    file_sd.close();
-                }
-                catch (IOException e) {
-                    System.out.println("Game Save: Unsuccessfull");
-                }
-            }
-
-            public void deserializer(){
-
-                try {
-//                    FileInputStream fs = new FileInputStream("Saves/Players_List.ser");
-//                    ObjectInputStream ob = new ObjectInputStream(fs);
-//
-//                    FileInputStream fs_obs = new FileInputStream("Saves/Obstacles_List.ser");
-//                    ObjectInputStream ob_obs = new ObjectInputStream(fs_obs);
-//
-//                    FileInputStream fs_cs = new FileInputStream("Saves/ColorSwitchers.ser");
-//                    ObjectInputStream ob_cs = new ObjectInputStream(fs_cs);
-//
-//                    FileInputStream fs_st = new FileInputStream("Saves/Stars.ser");
-//                    ObjectInputStream ob_st = new ObjectInputStream(fs_st);
-
-                    FileInputStream fs_sd = new FileInputStream("Saves/FullData.ser");
-                    ObjectInputStream ob_sd = new ObjectInputStream(fs_sd);
-
-                    while(true) {
-
-                        try {
-//                            SaveOrLoadGame.players=(ArrayList<SavePlayerStats>) ob.readObject();
-//                            SaveOrLoadGame.player_obstacle=(ArrayList<SaveObstaclesStats>)ob_obs.readObject();
-//                            SaveOrLoadGame.player_colorSwitchers=(ArrayList<SaveColorSwitchers>)ob_cs.readObject();
-//                            SaveOrLoadGame.player_stars=(ArrayList<SaveStars>)ob_st.readObject();
-
-                            SaveOrLoadGame.saveData=(ArrayList<SaveData>)ob_sd.readObject();
-                        }
-                        catch(IOException e)
-                        {
-                            break;
-                        }
-                        catch (ClassNotFoundException e) {
-                            break;
-                        }
-
-                    }
-//                    ob.close();
-//                    fs.close();
-//
-//                    ob_obs.close();
-//                    fs_obs.close();
-//
-//                    ob_cs.close();
-//                    fs_cs.close();
-//
-//                    ob_st.close();
-//                    fs_st.close();
-
-                    ob_sd.close();
-                    fs_sd.close();
-
-                }
-
-                catch (FileNotFoundException e) {
-                    System.out.println("HERE");
-                }
-
-                catch (IOException e) {
-                    ;
-                }
-
-            }
-        });
-
-        holder.getChildren().addAll(homebutton,resumebutton,savebutton);
-
-        Text pausetxt = new Text (300, 200, "PAUSE");
-        pausetxt.setFont(Font.loadFont ("file:resources/fonts/BlissfulThinking.otf", 75));
-        pausetxt.setFill(Color.WHITE);
-
-        holder.getChildren().addAll(pausetxt);
-        holder.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT,null,null)));
-
-        scene.setFill(bg);
-        stage.setTitle("Pause Menu");
-        stage.setScene(scene);
-        stage.show();
-    }
+    private static MediaPlayer clrswtch;
+    
+    
+    private MediaPlayer clickbutton;
 
     public void deserializer(){
 
         try {
-//                    FileInputStream fs = new FileInputStream("Saves/Players_List.ser");
-//                    ObjectInputStream ob = new ObjectInputStream(fs);
-//
-//                    FileInputStream fs_obs = new FileInputStream("Saves/Obstacles_List.ser");
-//                    ObjectInputStream ob_obs = new ObjectInputStream(fs_obs);
-//
-//                    FileInputStream fs_cs = new FileInputStream("Saves/ColorSwitchers.ser");
-//                    ObjectInputStream ob_cs = new ObjectInputStream(fs_cs);
-//
-//                    FileInputStream fs_st = new FileInputStream("Saves/Stars.ser");
-//                    ObjectInputStream ob_st = new ObjectInputStream(fs_st);
-
             FileInputStream fs_sd = new FileInputStream("Saves/FullData.ser");
             ObjectInputStream ob_sd = new ObjectInputStream(fs_sd);
 
             while(true) {
 
                 try {
-//                            SaveOrLoadGame.players=(ArrayList<SavePlayerStats>) ob.readObject();
-//                            SaveOrLoadGame.player_obstacle=(ArrayList<SaveObstaclesStats>)ob_obs.readObject();
-//                            SaveOrLoadGame.player_colorSwitchers=(ArrayList<SaveColorSwitchers>)ob_cs.readObject();
-//                            SaveOrLoadGame.player_stars=(ArrayList<SaveStars>)ob_st.readObject();
-
                     SaveOrLoadGame.saveData=(ArrayList<SaveData>)ob_sd.readObject();
                 }
                 catch(IOException e)
@@ -1348,31 +1013,17 @@ public class StartGame extends Application{
                 }
 
             }
-//                    ob.close();
-//                    fs.close();
-//
-//                    ob_obs.close();
-//                    fs_obs.close();
-//
-//                    ob_cs.close();
-//                    fs_cs.close();
-//
-//                    ob_st.close();
-//                    fs_st.close();
-
             ob_sd.close();
             fs_sd.close();
 
         }
 
         catch (FileNotFoundException e) {
-            System.out.println("HERE");
         }
 
         catch (IOException e) {
             ;
         }
-
     }
 
     public void GameOver(Stage stage) throws Exception {
@@ -1384,23 +1035,8 @@ public class StartGame extends Application{
 
             if (SaveOrLoadGame.saveData.get(i).getName().equals(currentPlayer.getName())) {
                 flag = true;
-//                        SaveOrLoadGame.players.set(i, new SavePlayerStats(currentPlayer));
-//                        SaveOrLoadGame.player_obstacle.set(i, new SaveObstaclesStats(ar));
-//                        SaveOrLoadGame.player_colorSwitchers.set(i, new SaveColorSwitchers(current_cs));
-//                        SaveOrLoadGame.player_stars.set(i, new SaveStars(current_stars));
-
-//                System.out.println(SaveOrLoadGame.saveData.get(i).getHighestScore());
             }
         }
-
-//        if(flag==false)
-//        {
-////                    SaveOrLoadGame.players.add(new SavePlayerStats(currentPlayer));
-////                    SaveOrLoadGame.player_obstacle.add(new SaveObstaclesStats(ar));
-////                    SaveOrLoadGame.player_colorSwitchers.add(new SaveColorSwitchers(current_cs));
-////                    SaveOrLoadGame.player_stars.add(new SaveStars(current_stars));
-//            SaveOrLoadGame.saveData.add(new SaveData(currentPlayer,ar,current_cs,current_stars));
-//        }
 
         String filenameP="Saves/Players_List.ser";
         String filenameO="Saves/Obstacles_List.ser";
@@ -1410,36 +1046,13 @@ public class StartGame extends Application{
 
         try
         {
-//                    FileOutputStream file_p=new FileOutputStream(filenameP);
-//                    ObjectOutputStream out_p=new ObjectOutputStream(file_p);
-//                    out_p.writeObject(SaveOrLoadGame.players);
-//                    out_p.close();
-//                    file_p.close();
-//
-//                    FileOutputStream file_o=new FileOutputStream(filenameO);
-//                    ObjectOutputStream out_o=new ObjectOutputStream(file_o);
-//                    out_o.writeObject(SaveOrLoadGame.player_obstacle);
-//                    out_o.close();
-//                    file_o.close();
-//
-//                    FileOutputStream file_cs=new FileOutputStream(filenameCS);
-//                    ObjectOutputStream out_cs=new ObjectOutputStream(file_cs);
-//                    out_cs.writeObject(SaveOrLoadGame.player_colorSwitchers);
-//                    out_cs.close();
-//                    file_cs.close();
-//
-//                    FileOutputStream file_st=new FileOutputStream(filenameSt);
-//                    ObjectOutputStream out_st=new ObjectOutputStream(file_st);
-//                    out_st.writeObject(SaveOrLoadGame.player_stars);
-//                    out_st.close();
-//                    file_st.close();
-
             FileOutputStream file_sd=new FileOutputStream(filenameSd);
             ObjectOutputStream out_sd=new ObjectOutputStream(file_sd);
             out_sd.writeObject(SaveOrLoadGame.saveData);
             out_sd.close();
             file_sd.close();
         }
+
         catch (IOException e) {
             System.out.println("Game Save: Unsuccessfull");
         }
@@ -1525,6 +1138,11 @@ public class StartGame extends Application{
             public void handle(ActionEvent actionEvent) {
                 Main obj=new Main();
                 try {
+
+                    clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                    clickbutton.setVolume(0.04);
+                    clickbutton.play();
+
                     obj.comeBackHome(stage);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1548,6 +1166,11 @@ public class StartGame extends Application{
             @Override
             public void handle(ActionEvent actionEvent) {
                 try {
+
+                    clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                    clickbutton.setVolume(0.04);
+                    clickbutton.play();
+
                     currentPlayer.setScore(0);
                     currentPlayer.setCenterY(710);
                     currentPlayer.setNew_player(true);
@@ -1590,7 +1213,6 @@ public class StartGame extends Application{
 
     public void Resurrect() throws FileNotFoundException {
 
-//        holder.getChildren().remove(holder.getChildren().indexOf(currentPlayer.getGroup()));
         currentPlayer.getBall().setVisible(false);
 
         AnimationTimer screenflash=new AnimationTimer(){
@@ -1771,9 +1393,32 @@ public class StartGame extends Application{
             }
         });
 
-
         resurrect.getChildren().addAll(titleimg4,replay,givestar);
         holder.getChildren().add(children);
         holder.getChildren().add(resurrect);
+    }
+}
+
+class InsufficientEntityException extends Exception{
+
+    public InsufficientEntityException(String message)
+    {
+        super(message);
+    }
+}
+
+class LargeBallRadiusException extends Exception{
+
+    public LargeBallRadiusException(String message)
+    {
+        super(message);
+    }
+}
+
+class InsufficientStarsException extends Exception{
+
+    public InsufficientStarsException(String message)
+    {
+        super(message);
     }
 }
