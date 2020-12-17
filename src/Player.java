@@ -6,6 +6,7 @@ import javafx.scene.paint.*;
 import javafx.scene.shape.*;
 
 import java.io.Serializable;
+import java.util.Random;
 
 public class Player implements Serializable {
     private String name;
@@ -23,12 +24,37 @@ public class Player implements Serializable {
     public boolean supersonicspeed=false;
     public boolean forcefield=false;
 
+    private Color blue=Color.rgb(65,228,243);
     private Color purple=Color.rgb(147,33,252);
+    private Color yellow=Color.rgb(247,225,29);
+    private Color pink=Color.rgb(255,16,136);
+
+    private static final long serialVersionUID=1;
 
     public Player()
     {
         ball=new Circle(400,710,ball_radius);
-        ball.setFill(purple);
+
+        int rand=new Random().nextInt(4)+1;
+        switch(rand)
+        {
+            case 1:
+                ball.setFill(purple);
+                break;
+
+            case 2:
+                ball.setFill(pink);
+                break;
+
+            case 3:
+                ball.setFill(yellow);
+                break;
+
+            case 4:
+                ball.setFill(blue);
+                break;
+        }
+
         g=new Group();
         g.getChildren().add(ball);
         curr_score=0;
@@ -146,4 +172,5 @@ public class Player implements Serializable {
     {
         return this.new_player;
     }
+
 }
