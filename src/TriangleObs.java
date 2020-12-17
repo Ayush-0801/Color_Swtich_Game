@@ -15,9 +15,11 @@ public class TriangleObs extends Obstacle{
     public TriangleObs(double x,double y, double sl, Color ballcolor)
     {
         super(x,y);
-        _side1=new Line(x,y,x+sl,y+sl);
-        _side2=new Line(x+sl,y+sl,x-sl,y+sl);
-        _side3=new Line(x-sl,y+sl,x,y);
+
+        y -= (sl/(Math.sqrt(3)));
+        _side1=new Line(x, y, x+sl/(double)2, y+(sl*Math.sqrt(3))/(double)2);
+        _side2=new Line(x+sl/(double)2, y+(sl*Math.sqrt(3))/(double)2, x-sl/(double)2, y+(sl*Math.sqrt(3))/(double)2);
+        _side3=new Line(x-sl/(double)2, y+sl*Math.sqrt(3)/(double)2, x, y);
 
         _ballcolor=ballcolor;
         formation();
