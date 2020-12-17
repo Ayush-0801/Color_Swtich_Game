@@ -13,6 +13,8 @@ public class Star {
     private double centerX,centerY;
     private double initialBX,initialBY;
 
+    private static final long serialVersionUID=3;
+
     public Star(double x,double y) throws FileNotFoundException {
         StarImage=new Image(new FileInputStream("src/Icons/star.png"));
         viewStar=new ImageView(StarImage);
