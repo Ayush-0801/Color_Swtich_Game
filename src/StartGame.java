@@ -464,6 +464,147 @@ public class StartGame extends Application{
             }
         };
         
+        //Bonus 2
+        forceFieldTimer=new AnimationTimer() {
+
+            private long timer=0;
+            private Color oldPlayerColor;
+            private Color sceneOld;
+            private ImageView FieldAround;
+            private ImageView ufo;
+            private ImageView[][] Twinkle=new ImageView[4][4];
+
+            @Override
+            public void handle(long l) {
+
+                if(timer==0) {
+
+                    Main.m1.stop();
+                    forceFieldSong=new MediaPlayer(new Media(new File("Music/forceFieldSongs.mp3").toURI().toString()));
+                    forceFieldSong.setCycleCount(-1);
+                    forceFieldSong.setVolume(0.15);
+                    forceFieldSong.play();
+
+                    oldPlayerColor = (Color) currentPlayer.getBall().getFill();
+                    sceneOld = (Color) scene.getFill();
+
+                    scene.setFill(Color.BLACK);
+                    currentPlayer.setFill(Color.GHOSTWHITE);
+
+                    Image spaceShip= null;
+                    try {
+                        spaceShip = new Image(new FileInputStream("src/Icons/spaceship.png"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    ufo=new ImageView();
+                    ufo.setImage(spaceShip);
+                    ufo.setFitWidth(65);
+                    ufo.setPreserveRatio(true);
+                    currentPlayer.getGroup().getChildren().add(ufo);
+
+                    Image FieldImage= null;
+                    try {
+                        FieldImage = new Image(new FileInputStream("src/Icons/shd.gif"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    FieldAround=new ImageView();
+                    FieldAround.setRotate(180);
+                    FieldAround.setImage(FieldImage);
+                    FieldAround.setFitWidth(120);//80
+                    FieldAround.setPreserveRatio(true);
+
+                    Glow ef=new Glow();
+                    ef.setLevel(0.7);
+                    FieldAround.setEffect(ef);
+                    ufo.setOpacity(0.75);
+
+                    currentPlayer.getBall().setOpacity(0);
+                    currentPlayer.getGroup().getChildren().add(0,FieldAround);
+
+                    Image LoadTwinkleGif= null;
+                    try {
+                        LoadTwinkleGif = new Image(new FileInputStream("src/Icons/countdown.gif"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    ImageView Timer10=new ImageView();
+                    Timer10.setImage(LoadTwinkleGif);
+                    Timer10.setFitWidth(200);
+                    Timer10.setPreserveRatio(true);
+                    Timer10.setX(600);
+                    Timer10.setY(0);
+                    Timer10.setOpacity(1);
+                    currentPlayer.getGroup().getChildren().add(0, Timer10);
+
+                    Image Twinkling= null;
+                    try {
+                        Twinkling = new Image(new FileInputStream("src/Icons/twinkle1.gif"));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    for(int i=0;i<4;i++) {
+                        for (int j = 0; j < 4; j++) {
+
+                            Twinkle[i][j] = new ImageView();
+                            Twinkle[i][j].setImage(Twinkling);
+                            Twinkle[i][j].setFitWidth(200);
+                            Twinkle[i][j].setFitHeight(200);
+                            Twinkle[i][j].setX(0 + i * 200);
+                            Twinkle[i][j].setY(0 + j * 200);
+                            currentPlayer.getGroup().getChildren().add(0, Twinkle[i][j]);
+                        }
+                    }
+
+                    for (Obstacle obs : ar) {
+                        FadeTransition f = new FadeTransition();
+                        f.setDuration(Duration.millis(500));
+                        f.setFromValue(10);
+                        f.setToValue(0);
+                        f.setCycleCount(20);
+                        f.setAutoReverse(true);
+                        f.setNode(obs.getGroup());
+                        f.play();
+                    }
+                }
+
+                if(counter==2)
+                    counter=0;
+
+                timer++;
+                FieldAround.setX(currentPlayer.getCenterX()-62);//38.5
+                FieldAround.setY(currentPlayer.getCenterY()-58.3);//37.5
+
+                ufo.setX(currentPlayer.getCenterX()-35);
+                ufo.setY(currentPlayer.getCenterY()-20);
+
+                if(timer>575)
+                {
+                    currentPlayer.forcefield=false;
+
+                    currentPlayer.getBall().setFill(oldPlayerColor);
+                    scene.setFill(sceneOld);
+                    currentPlayer.getBall().setEffect(null);
+                    currentPlayer.getBall().setOpacity(1);
+
+                    for(int i=0;i<18;i++)
+                    {
+                        currentPlayer.getGroup().getChildren().remove(0);
+                    }
+
+                    currentPlayer.getGroup().getChildren().remove(1);
+                    this.stop();
+                    timer=0;
+
+                    forceFieldSong.stop();
+                    Main.m1.play();
+                }
+            }
+        };
+        
         Media die=new Media(new File("Music/dead.wav").toURI().toString());
         t=new AnimationTimer() {
             final double gravity=0.55;
@@ -615,6 +756,51 @@ public class StartGame extends Application{
 
             currentPlayer.supersonicspeed=true;
         }
+    }
+    
+    public void checkForceField()
+    {
+        if( forceFieldObjects.isEmpty()==false && currentPlayer.getBall().intersects(forceFieldObjects.get(0).getBoundsInParent()))
+        {
+            int index=holder.getChildren().indexOf(forceFieldObjects.get(0));
+            forceFieldObjects.remove(0);
+            holder.getChildren().remove(index);
+
+            if(!currentPlayer.forcefield)
+                forceFieldTimer.start();
+            currentPlayer.forcefield=true;
+        }
+    }
+    
+    public void JumpBall(double speeddown, double gravity, double time) throws LargeBallRadiusException
+    {
+        speeddown+=gravity*time;
+
+        if(Up_Key_Pressed && (currentPlayer.getCenterY()+speeddown)>400)
+        {
+            speeddown=-16.7*gravity*time;
+            Up_Key_Pressed=false;
+        }
+
+        else if(Up_Key_Pressed)
+        {
+            ShiftScreenDown();
+            speeddown=-5*gravity*time;
+            Up_Key_Pressed=false;
+        }
+
+        if(currentPlayer.getCenterY()+speeddown<= showHand.getBoundsInParent().getMinY()-22)
+        {
+            currentPlayer.setCenterY(currentPlayer.getCenterY() + speeddown);
+        }
+
+        if(currentPlayer.getCenterY() >800)
+        {
+            currentPlayer.setCenterY(currentPlayer.getCenterY() + speeddown);
+            currentPlayer.setAliveStatus(false);
+        }
+        initial=currentPlayer.getShiftInY();
+        currentPlayer.setcurrSpeed(speeddown);
     }
 
     public void insertObjects() throws FileNotFoundException,InsufficientEntityException{
@@ -971,6 +1157,67 @@ public class StartGame extends Application{
 
     private static MediaPlayer star;
 
+    public void UpdateScore() throws InsufficientStarsException
+    {
+        Media starCollected=new Media(new File("Music/Star.wav").toURI().toString());
+        boolean hit=false;
+
+        if(currentPlayer.getScore()==0 && current_stars.isEmpty())
+        {
+            throw new InsufficientStarsException("There are not enough stars for resurrection");
+        }
+
+        while(current_stars.isEmpty()==false && currentPlayer.getBall().intersects(current_stars.get(0).getGroup().getBoundsInParent()))
+        {
+            hit=true;
+            holder.getChildren().remove(holder.getChildren().indexOf(current_stars.get(0).getGroup()));
+            current_stars.remove(0);
+        }
+
+        if(hit)
+        {
+            star=new MediaPlayer(starCollected);
+            star.setVolume(0.04);
+            star.play();
+
+            currentPlayer.setScore(currentPlayer.getScore()+1);         //value update
+
+            int rndm=new Random().nextInt(4)+1;
+            switch(rndm)
+            {
+                case 1:score.setFill(blue);
+                    break;
+
+                case 2:score.setFill(pink);
+                    break;
+
+                case 3:score.setFill(yellow);
+                    break;
+
+                case 4:score.setFill(purple);
+                    break;
+            }
+            if(!currentPlayer.supersonicspeed) {
+                scoreAnimator.setX(currentPlayer.getCenterX());
+                scoreAnimator.setY(currentPlayer.getCenterY());
+                FadeTransition f1 = new FadeTransition();
+                f1.setCycleCount(1);
+                f1.setFromValue(10);
+                f1.setToValue(0);
+                f1.setDuration(Duration.millis(1000));
+                f1.setNode(scoreAnimator);
+                f1.play();
+            }
+        }
+
+        if(currentPlayer.getScore()>currentPlayer.getHighest_score())
+        {
+            currentPlayer.setHighest_score(currentPlayer.getScore());
+        }
+
+        score.setText(Integer.toString(currentPlayer.getScore()));
+    }
+    
     public void ShiftScreenDown()
     {
         for(int i=0;i<holder.getChildren().size();i++) {
@@ -990,9 +1237,248 @@ public class StartGame extends Application{
 
     private static MediaPlayer clrswtch;
     
+    public void ColorSwitcherCheck()
+    {
+        Media changeColor=new Media(new File("Music/colorswitch.wav").toURI().toString());
+        boolean hit=false;
+
+        while(current_cs.isEmpty()==false && currentPlayer.getBall().intersects(current_cs.get(0).getBoundsInParent()))
+        {
+            hit=true;
+            holder.getChildren().remove(current_cs.get(0).getGroup());
+            current_cs.remove(0);
+        }
+
+        if(hit)
+        {
+            clrswtch=new MediaPlayer(changeColor);
+            clrswtch.setVolume(0.04);
+            clrswtch.play();
+
+            Random ob=new Random();
+            int value=ob.nextInt(4)+1;
+
+            if(currentPlayer.getFill().equals(blue))
+            {
+                while(value==1)
+                    value=ob.nextInt(4)+1;
+            }
+            else if(currentPlayer.getFill().equals(purple))
+            {
+                while(value==2)
+                    value=ob.nextInt(4)+1;
+            }
+
+            else if(currentPlayer.getFill().equals(yellow))
+            {
+                while(value==3)
+                    value=ob.nextInt(4)+1;
+            }
+            else if(currentPlayer.getFill().equals(pink))
+            {
+                while(value==4)
+                    value=ob.nextInt(4)+1;
+            }
+
+            switch (value) {
+                case 1 :
+                    currentPlayer.setFill(blue);
+                    break;
+                case 2 :
+                    currentPlayer.setFill(purple);
+                    break;
+                case 3 :
+                    currentPlayer.setFill(yellow);
+                    break;
+                case 4 :
+                    currentPlayer.setFill(pink);
+                    break;
+            }
+        }
+    }
     
     private MediaPlayer clickbutton;
+        public void PauseMenuFunction(Stage stage) throws FileNotFoundException
+    {
+        previous=stage.getScene();
+        Pane holder = new Pane();
+        Scene scene = new Scene(holder, 800, 800);
 
+        FileInputStream input1 = new FileInputStream("src/Icons/HomeButton.png");
+        Image img1= new Image(input1);
+        ImageView homeimg = new ImageView(img1);
+        homeimg.setFitHeight(70);
+        homeimg.setPreserveRatio(true);
+
+        FileInputStream input = new FileInputStream("src/Icons/PlayButton.png");
+        Image img = new Image(input);
+        ImageView resumeimg = new ImageView(img);
+        resumeimg.setFitHeight(150);
+        resumeimg.setPreserveRatio(true);
+
+        Button homebutton=new Button();
+        homebutton.setTranslateX(50);
+        homebutton.setTranslateY(30);
+        homebutton.setStyle(
+                "-fx-background-radius: 100em; " +
+                        "-fx-min-width: 70px; " +
+                        "-fx-min-height: 70px; " +
+                        "-fx-max-width: 70px; " +
+                        "-fx-max-height: 70px;" +
+                        "-fx-background-color: #555555"
+        );
+        homebutton.setGraphic(homeimg);
+        homebutton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                Main obj=new Main();
+                try {
+
+                    clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                    clickbutton.setVolume(0.04);
+                    clickbutton.play();
+
+                    obj.comeBackHome(stage);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Button resumebutton=new Button();
+        resumebutton.setTranslateX(315);
+        resumebutton.setTranslateY(250);
+        resumebutton.setStyle(
+                "-fx-background-radius: 100em; " +
+                        "-fx-min-width: 150px; " +
+                        "-fx-min-height: 150px; " +
+                        "-fx-max-width: 150px; " +
+                        "-fx-max-height: 150px;" +
+                        "-fx-background-color: #555555"
+        );
+        resumebutton.setGraphic(resumeimg);
+        resumebutton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+
+                clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                clickbutton.setVolume(0.04);
+                clickbutton.play();
+
+                stage.setScene(previous);
+            }
+        });
+
+        Button savebutton=new Button();
+        savebutton.setTranslateX(225);
+        savebutton.setTranslateY(450);
+        savebutton.setStyle(
+                "-fx-background-radius: 20em; " +
+                        "-fx-min-width: 350px; " +
+                        "-fx-min-height: 70px; " +
+                        "-fx-max-width: 350px; " +
+                        "-fx-max-height: 70px;" +
+                        "-fx-background-color: #5D5D5D;"+
+                        "-fx-font-size: 30px;"+
+                        "-fx-font-weight: bold;"+
+                        "-fx-text-fill: white;"+
+                        "-fx-font-family: \"Blissful Thinking\";"
+        );
+        savebutton.setText("SAVE PROGRESS");
+        savebutton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent actionEvent) {
+
+                clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                clickbutton.setVolume(0.04);
+                clickbutton.play();
+
+                deserializer();
+                boolean flag=false;
+
+                for (int i = 0; i < SaveOrLoadGame.saveData.size(); i++) {
+
+                    if (SaveOrLoadGame.saveData.get(i).getName().equals(currentPlayer.getName())) {
+                        flag = true;
+                        SaveOrLoadGame.saveData.set(i,new SaveData(currentPlayer,ar,current_cs,current_stars));
+                    }
+                }
+
+                if(flag==false)
+                {
+                    SaveOrLoadGame.saveData.add(new SaveData(currentPlayer,ar,current_cs,current_stars));
+                }
+
+                String filenameP="Saves/Players_List.ser";
+                String filenameO="Saves/Obstacles_List.ser";
+                String filenameCS="Saves/ColorSwitchers.ser";
+                String filenameSt="Saves/Stars.ser";
+                String filenameSd="Saves/FullData.ser";
+
+                try
+                {
+                    FileOutputStream file_sd=new FileOutputStream(filenameSd);
+                    ObjectOutputStream out_sd=new ObjectOutputStream(file_sd);
+                    out_sd.writeObject(SaveOrLoadGame.saveData);
+                    out_sd.close();
+                    file_sd.close();
+                }
+                catch (IOException e) {
+                    System.out.println("Game Save: Unsuccessfull");
+                }
+            }
+
+            public void deserializer(){
+
+                try {
+                    FileInputStream fs_sd = new FileInputStream("Saves/FullData.ser");
+                    ObjectInputStream ob_sd = new ObjectInputStream(fs_sd);
+
+                    while(true) {
+
+                        try {
+                            SaveOrLoadGame.saveData=(ArrayList<SaveData>)ob_sd.readObject();
+                        }
+                        catch(IOException e)
+                        {
+                            break;
+                        }
+                        catch (ClassNotFoundException e) {
+                            break;
+                        }
+
+                    }
+                    ob_sd.close();
+                    fs_sd.close();
+
+                }
+
+                catch (FileNotFoundException e) {
+                }
+
+                catch (IOException e) {
+                    ;
+                }
+
+            }
+        });
+
+        holder.getChildren().addAll(homebutton,resumebutton,savebutton);
+
+        Text pausetxt = new Text (300, 200, "PAUSE");
+        pausetxt.setFont(Font.loadFont ("file:resources/fonts/BlissfulThinking.otf", 75));
+        pausetxt.setFill(Color.WHITE);
+
+        holder.getChildren().addAll(pausetxt);
+        holder.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT,null,null)));
+
+        scene.setFill(bg);
+        stage.setTitle("Pause Menu");
+        stage.setScene(scene);
+        stage.show();
+    }
+    
     public void deserializer(){
 
         try {
