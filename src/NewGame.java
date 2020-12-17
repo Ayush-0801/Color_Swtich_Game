@@ -3,6 +3,8 @@ import java.io.*;
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
@@ -21,6 +23,8 @@ public class NewGame extends Application {
     private Scene scene;
     private StartGame _beginNewGame;
     private Button submitButton;
+
+    private static MediaPlayer clickbutton;
 
     public void comeToThisScene(Stage stage) throws FileNotFoundException {
         start(stage);
@@ -77,12 +81,16 @@ public class NewGame extends Application {
             public void handle(ActionEvent actionEvent) {
                 if(playername.getText().equals("")==false)
                 {
+
+                    clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                    clickbutton.setVolume(0.04);
+                    clickbutton.play();
+
                     _newPlayer=new Player();
                     _newPlayer.setName(playername.getText());
                     _beginNewGame=new StartGame();
                     try {
                         _beginNewGame.comeToThisScene(stage,_newPlayer);
-                        System.out.println("FRPM HERE ON CLICK");
                     }
                     catch (FileNotFoundException e) {
                         e.printStackTrace();
@@ -98,13 +106,16 @@ public class NewGame extends Application {
                 {
                     if(!playername.getText().equals(""))
                     {
+                        clickbutton=new MediaPlayer(new Media(new File("Music/button.wav").toURI().toString()));
+                        clickbutton.setVolume(0.04);
+                        clickbutton.play();
+
                         _newPlayer=new Player();
                         _newPlayer.setName(playername.getText());
                         _beginNewGame=new StartGame();
 
                         try {
                             _beginNewGame.comeToThisScene(stage,_newPlayer);
-                            System.out.println("FRPM HERE");
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                         }
