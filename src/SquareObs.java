@@ -20,6 +20,9 @@ public class SquareObs extends Obstacle{
     public SquareObs(double x,double y,double sl)
     {
         super(x,y);
+        x = x - sl/(double)2;
+        y = y - sl/(double)2;
+
         _side1=new Line(x,y,x,y+sl);
         _side2=new Line(x,y+sl,x+sl,y+sl);
         _side3=new Line(x+sl,y+sl,x+sl,y);
