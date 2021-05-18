@@ -66,3 +66,16 @@ This feature activates a shield for 10 seconds to avoid collision from incoming 
 3. **Sound Effects and Background Music** <br>
 The addition of sound effects on various actions such as button press,star collection, bonus mode and background music according to the game mode (normal,supersonic and forcefield).
 
+<h2> Gameplay Screenshots </h2>
+
+![alt text](https://github.com/Ayush-0801/Color_Swtich_Game/blob/main/Screenshots/Image1.png)
+
+![alt text](https://github.com/Ayush-0801/Color_Swtich_Game/blob/main/Screenshots/Image2.png)
+
+![alt text](https://github.com/Ayush-0801/Color_Swtich_Game/blob/main/Screenshots/Image6.png)
+
+![alt text](https://github.com/Ayush-0801/Color_Swtich_Game/blob/main/Screenshots/Image3.png)
+
+![alt text](https://github.com/Ayush-0801/Color_Swtich_Game/blob/main/Screenshots/Image4.png)
+
+
